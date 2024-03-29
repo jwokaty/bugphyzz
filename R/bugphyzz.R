@@ -12,8 +12,8 @@ utils::globalVariables(c(
 #' tidy data.frames. To learn more about the structure of the data.frames
 #' please check the bugphyzz vignette with `browseVignettes("bugphyzz")`.
 #'
-#' @param version Character string indicating the version.
-#' Options: devel or a zenodo record.
+#' @param version Character string indicating the version. Default is the
+#' latest release on Zenodo.  Options: Zenodo DOI, GitHub commit hash, or devel.
 #' @param force_download Logical value. Force a fresh download of the data or
 #' use the one stored in the cache (if available). Default is FALSE.
 #' @param v Validation value. Default 0.5 (see details).
@@ -54,12 +54,11 @@ utils::globalVariables(c(
 #' names(bp)
 #'
 importBugphyzz <- function(
-    version = 'devel', force_download = FALSE, v = 0.5, exclude_rarely = TRUE
+    version = "d3fd894", force_download = FALSE, v = 0.5, exclude_rarely = TRUE
 
 ) {
-  if (version == 'devel') {
-    output <- .downloadDevel(force_download)
-  }
+  output <- .downloadResource(version, force_download)
+
   ## TODO add release version
   output <- lapply(output, function(x) split(x, x$Attribute))
   output <- purrr::list_flatten(output)
@@ -297,14 +296,21 @@ getTaxonSignatures <- function(tax, bp, ...) {
     )
 }
 
-## Import the devel version of bupghyzz
-.downloadDevel <- function(force_download) {
+## Import a version of bupghyzz
+.downloadResource <- function(version, force_download) {
+  if (stringr::str_detect(version, stringr::regex("^[:alnum:]+$")))
+    url_prefix <- "https://media.github.com/waldronlab/bugphyzzExports/raw/main/bugphyzz_"
+  else if (stringr::str_detect(version, stringr::regex("^10.5281/zenodo.[0-9]+$"))) {
+    suffix <- sub("^10.5281/zenodo\\.", "", version)
+    url_prefix <- paste0("https://zenodo.org/records/", suffix,
+                         "/files/bugsigdb_signatures_genus_metaphlan.gmt")
+  } else if (version == "devel")
+    url_prefix <- "https://raw.githubusercontent.com/waldronlab/bugphyzzExports/main/bugphyzz_"
+  else
+    stop("Version must be a Zenodo DOI, GitHub commit hash, or 'devel'.")
+
   types <- c("multistate", "binary", "numeric")
-  urls <- paste0(
-    "https://github.com/waldronlab/bugphyzzExports/raw/main/bugphyzz_",
-    types,
-    ".csv"
-  )
+  urls <- paste0(url_prefix, types, ".csv")
   names(urls) <- types
   output <- vector("list", length(urls))
   for (i in seq_along(output)) {
@@ -316,33 +322,6 @@ getTaxonSignatures <- function(tax, bp, ...) {
     )
     output[[i]] <- utils::read.csv(rpath, header = TRUE, skip = 1) |>
       dplyr::mutate(Attribute = tolower(Attribute))
-  }
-  return(output)
-}
-
-## TODO update this function when relase is ready
-.downloadZ <- function(record, force_download) {
-  base_url <- paste0("https://zenodo.org/api/records/", record)
-  req <- httr2::request(base_url)
-  res <- httr2::req_perform(req)
-  l <- httr2::resp_body_json(res)
-
-  file_names_api <- purrr::map_chr(l$files, ~ .x$links$self)
-  file_names_url <- sub("(^.*)(api/)(.*)(/content$)", "\\1\\3", file_names_api)
-
-  rpath <- .getResource(
-    rname = paste0("bugphyzz.zip"),
-    url = file_names_url, verbose = TRUE, force = force_download
-  )
-  temp_dir <- tempdir()
-  utils::unzip(zipfile = rpath, exdir = temp_dir, junkpaths = TRUE)
-  files <- list.files(temp_dir, pattern = "csv", full.names = TRUE)
-
-  output <- vector("list", length(files))
-  for (i in seq_along(output)) {
-    output[[i]] <- utils::read.csv(files[i], header = TRUE)
-    # output[[i]] <- utils::read.csv(files, header = TRUE, skip = 1)
-    # dplyr::mutate(Attribute = tolower(Attribute))
   }
   return(output)
 }
