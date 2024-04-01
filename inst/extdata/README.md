@@ -104,6 +104,38 @@ Columns:
 | unit | units used for numeric data. |
 
 
+## [validation_summary.tsv](./validation_summary.tsv)
+
+Results of the validation of the ASR method using the waldronlab/taxPPro package
+
+Hash: e736097
+
+| Column name | Description |
+| ----------- | ----------- |
+| method | ASR method (phytools-ltp or castor-ltp) |
+| rank | Taxonomic rank (all, genus, species, strain). all was used for the final results.|
+| physiology | The name of the attribute group. |
+| attribute | The name of the attribute or attribute value.|
+| mcc_mean | mean of Mathew's correlation coefficient for discrete only. |
+| mcc_sd | standard deviation of Matthew's correlation coefficient for discrete only.|
+| r2_mean | R-squard for numeric only. |
+| r2_sd | R-squared for numeric only. |
+| ltp_bp | Interesction between taxa in bugphyzz (per attribute/attribute value) and the ltp tree. |
+| bp | Taxa in bugphyzz (per attribute/attribute value). |
+| ltp_bp_phys | Intersection between taxa in bugphyz (per attribute group) and the ltp tree. |
+| bp_phys | Total taxa in the bugphyzz (per attribute group).|
+| ltp | Number of taxa in the LTP tree. |
+| nsti_mean | Mean NSTI value. This was calculated for all physiologies, but is only relevant for numeric ones.|
+| nsti_sd |  Standard deviation of the NSTI value. This was calculated for all physiologies, but is only relevant for numeric ones. |
+| ltp_bp_per | Intersection of LTP tree and bugphyzz (per attribute/attribute value) in numbers. |
+| ltp_bp_phys_per | Intersection of LTP tree and bugphyzz (per physiology/attribute group) in percentage. |
+
+
+
+
+
+
+
 
 
 

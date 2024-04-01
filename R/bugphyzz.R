@@ -287,9 +287,10 @@ getTaxonSignatures <- function(tax, bp, ...) {
 }
 
 .validationData <- function() {
-  url <-  "https://raw.githubusercontent.com/waldronlab/taxPProValidation/main/validation_summary.tsv"
+  fname <- system.file("extdata", "validation_summary.tsv", package = "bugphyzz")
+  # url <-  "https://raw.githubusercontent.com/waldronlab/taxPProValidation/main/validation_summary.tsv"
   utils::read.table(
-    file = url, header = TRUE, sep = "\t", row.names = NULL
+    file = fname, header = TRUE, sep = "\t", row.names = NULL
   ) |>
     dplyr::mutate(
       value = dplyr::case_when(
@@ -312,6 +313,7 @@ getTaxonSignatures <- function(tax, bp, ...) {
   return(output)
 }
 
+## Function for downloading data on Zenodo
 .downloadZ <- function(record, force_download) {
   base_url <- paste0("https://zenodo.org/api/records/", record)
   req <- httr2::request(base_url)
@@ -337,6 +339,7 @@ getTaxonSignatures <- function(tax, bp, ...) {
   return(output)
 }
 
+## Function for downloading data on GitHub
 .downloadGH <- function(version, force_download) {
     file_suffix <- c("binary", "multistate", "numeric")
     urls <- paste0("https://github.com/waldronlab/bugphyzzExports/raw/",
