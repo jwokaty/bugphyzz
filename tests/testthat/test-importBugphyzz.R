@@ -63,8 +63,6 @@ checkColumnTypes <- function(x) {
 }
 
 checkNAs <- function(x) {
-  ## TODO
-  ## Some columns should never have NAs
   select_col <- c(
     "NCBI_ID",
     "Taxon_name",
@@ -73,31 +71,104 @@ checkNAs <- function(x) {
     "Attribute_value",
     "Attribute_type",
     "Evidence",
-    "Frequency"
-    # "Score"
-    ## Regarding numeric attributes, the frequency used was "unknown"
-    ## Maybe I should assign a minimal score to these ones as well
+    "Frequency",
+    "Score"
   )
-  x <- x[,select_col]
+  x <- x[, select_col]
   !any(purrr::map_lgl(x, ~ any(is.na(.x))))
 }
 
 checkCuration <- function(x) {
-  ## TODO
-  ## Only allowed keywords are included in the final output
-  x
+
+  ## Valid values
+  Rank_vals <- c(
+    "superkingdom", "kingdom", "domain", "phylum", "class", "order",
+    "family", "genus","species", "strain"
+  )
+  Attribute_type_vals <- c(
+    "multistate-union", "multistate-intersection", "binary",
+    "numeric"
+  )
+  Frequency_vals <- c(
+    "always", "usually", "sometimes", "rarely", "never", "unknown"
+  )
+  Evidence_vals <- c(
+    "exp", "igc", "nas", "tas", "tax", "asr"
+  )
+  Confidence_in_curation_vals <- c(
+    "high", "medium", "low"
+  )
+
+  attr_type <- unique(x$Attribute_type)
+
+  ## Columns omitted here are tested elsewhere
+  ## Attribute_type for numeric values
+  ## Score
+  ## NSTI
+  ## Validation
+  ## NCBI_ID
+  ## Taxon_name
+
+  Rank_ok <- all(x$Rank %in% Rank_vals)
+  Attribute_type_ok <- attr_type %in% Attribute_type_vals
+  Evidence_ok <- all(x$Evidence %in% Evidence_vals)
+  Frequency_ok <- all(unique(x$Frequency) %in% Frequency_vals)
+  # Score_ok <- all(as.double(na.omit(x$Score)) >=0 & as.double(na.omit(x$Score <=1)))
+  Confidence_in_curation_ok <- all(na.omit(x$Confidence_in_curation) %in% Confidence_in_curation_vals)
+
+  ## Attribute_source
+  srcs_tsv <- system.file("extdata", "attribute_sources.tsv", package = "bugphyzz")
+  srcs <- readr::read_tsv(srcs_tsv, show_col_types = FALSE)
+  Attribute_source_ok <- all(na.omit(x$Attribute_source) %in% srcs$Attribute_source)
+
+  ## Attribute
+  attrs_tsv <- system.file("extdata", "attributes.tsv", package = "bugphyzz")
+  attrs_tbl <- readr::read_tsv(attrs_tsv, show_col_types = FALSE) |>
+    dplyr::mutate(attribute_group = tolower(attribute_group))
+  attrs <- attrs_tbl |>
+    dplyr::mutate(attribute_group = strsplit(attribute_group, ";")) |>
+    dplyr::pull(attribute_group) |>
+    unlist() |>
+    unique() |>
+    {\(y)  y[!is.na(y)]}()
+  Attribute_ok <- unique(x$Attribute) %in% attrs
+
+  results <- c(
+      Rank = Rank_ok,
+      Attribute_type = Attribute_type_ok,
+      Frequency = Frequency_ok,
+      Evidence = Evidence_ok,
+      Confidence_in_curation = Confidence_in_curation_ok,
+      Attribute_source = Attribute_source_ok,
+      Attribute = Attribute_ok
+    )
+
+  ## Attribute_value
+  if (attr_type %in% c("multistate-union", "multistate-intersection")) {
+    Attribute_value_vals <- attrs_tbl |>
+      dplyr::filter(grepl(unique(x$Attribute), attribute_group)) |>
+      dplyr::pull(attribute) |>
+      unique() |>
+      {\(y)  y[!is.na(y)]}() |>
+      tolower()
+
+   Attribute_value_ok <- all(x$Attribute_value %in% Attribute_value_vals)
+   results <- c(results, Attribute_value = Attribute_value_ok)
+  }
+  return(all(results))
+  # return(results)
 }
 
 # tests -------------------------------------------------------------------
 
 test_that("importBugphyzz works with devel", {
-  bp <- importBugphyzz(version = "devel", force_download = TRUE)
+  bp <- importBugphyzz(version = "devel", force_download = FALSE)
   expect_true(all("data.frame" == map_chr(bp, class)))
   expect_true(all(map_lgl(bp, ~ nrow(.x) > 0)))
   expect_true(all(map_lgl(bp, checkColumnNames)))
   expect_true(all(map_lgl(bp, checkColumnTypes)))
   expect_true(all(map_lgl(bp, checkNAs)))
-
+  expect_true(all(map_lgl(bp, checkCuration)))
 })
 
 test_that("importBugphyzz works with hash", {
@@ -107,6 +178,7 @@ test_that("importBugphyzz works with hash", {
   expect_true(all(map_lgl(bp, checkColumnNames)))
   expect_true(all(map_lgl(bp, checkColumnTypes)))
   expect_true(all(map_lgl(bp, checkNAs)))
+  expect_true(all(map_lgl(bp, checkCuration)))
 })
 
 ## TODO create test for using Zenodo
