@@ -2,7 +2,6 @@
 # Setup -------------------------------------------------------------------
 
 library(purrr)
-bp <- importBugphyzz()
 expected_columns_multistate <- c(
   NCBI_ID = "integer", Taxon_name = "character",
   Rank = "character",
@@ -62,17 +61,30 @@ checkColumnTypes <- function(x) {
   return(all(lgl_vct))
 }
 
-# Tests -------------------------------------------------------------------
+checkNAs <- function(x) {
+  x
+}
 
-test_that("importBugphyzz works", {
-  chr_vct <- map_chr(bp, class)
-  expect_true(all("data.frame" == chr_vct))
-})
+# tests -------------------------------------------------------------------
 
-test_that("All variable names are correct", {
+test_that("importBugphyzz works with devel", {
+  bp <- importBugphyzz(version = "devel", force_download = TRUE)
+  expect_true(all("data.frame" == map_chr(bp, class)))
+  expect_true(all(map_lgl(bp, ~ nrow(.x) > 0)))
   expect_true(all(map_lgl(bp, checkColumnNames)))
+  expect_true(all(map_lgl(bp, checkColumnTypes)))
 })
 
-test_that("All variable types are correct", {
+test_that("importBugphyzz works with hash", {
+  bp <- importBugphyzz(version = "d3fd894", force_download = TRUE)
+  expect_true(all("data.frame" == map_chr(bp, class)))
+  expect_true(all(map_lgl(bp, ~ nrow(.x) > 0)))
+  expect_true(all(map_lgl(bp, checkColumnNames)))
   expect_true(all(map_lgl(bp, checkColumnTypes)))
+})
+
+## TODO create test for using Zenodo
+
+test_that("importBugphyzz doesn't work with other words", {
+  expect_error(importBugphyzz(version = "abcd-1234", force_download = TRUE))
 })
