@@ -300,7 +300,7 @@ getTaxonSignatures <- function(tax, bp, ...) {
 }
 
 ## Import a version of bupghyzz
-.downloadResource <- function(version = "d3fd894", force_download) {
+.downloadResource <- function(version, force_download) {
   if (stringr::str_detect(version, "^10.5281/zenodo.[0-9]+$")) {
     suffix <- sub("^10.5281/zenodo\\.", "", version)
     output <- .downloadZ(suffix, force_download)
@@ -337,7 +337,7 @@ getTaxonSignatures <- function(tax, bp, ...) {
   return(output)
 }
 
-.downloadGH <- function(version = "devel", force_download) {
+.downloadGH <- function(version, force_download) {
     file_suffix <- c("binary", "multistate", "numeric")
     urls <- paste0("https://github.com/waldronlab/bugphyzzExports/raw/",
            version, "/bugphyzz_", file_suffix, ".csv"
