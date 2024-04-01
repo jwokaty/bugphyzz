@@ -30,5 +30,4 @@ browseVigenttes("bugphyzz")
 
 TODO:
 
-- Remove LICENSE file
 - Add scores to signatures
