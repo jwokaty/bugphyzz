@@ -2,6 +2,7 @@
 # Setup -------------------------------------------------------------------
 
 library(purrr)
+
 expected_columns_multistate <- c(
   NCBI_ID = "integer", Taxon_name = "character",
   Rank = "character",
@@ -62,6 +63,28 @@ checkColumnTypes <- function(x) {
 }
 
 checkNAs <- function(x) {
+  ## TODO
+  ## Some columns should never have NAs
+  select_col <- c(
+    "NCBI_ID",
+    "Taxon_name",
+    "Rank",
+    "Attribute",
+    "Attribute_value",
+    "Attribute_type",
+    "Evidence",
+    "Frequency"
+    # "Score"
+    ## Regarding numeric attributes, the frequency used was "unknown"
+    ## Maybe I should assign a minimal score to these ones as well
+  )
+  x <- x[,select_col]
+  !any(purrr::map_lgl(x, ~ any(is.na(.x))))
+}
+
+checkCuration <- function(x) {
+  ## TODO
+  ## Only allowed keywords are included in the final output
   x
 }
 
@@ -73,6 +96,8 @@ test_that("importBugphyzz works with devel", {
   expect_true(all(map_lgl(bp, ~ nrow(.x) > 0)))
   expect_true(all(map_lgl(bp, checkColumnNames)))
   expect_true(all(map_lgl(bp, checkColumnTypes)))
+  expect_true(all(map_lgl(bp, checkNAs)))
+
 })
 
 test_that("importBugphyzz works with hash", {
@@ -81,10 +106,10 @@ test_that("importBugphyzz works with hash", {
   expect_true(all(map_lgl(bp, ~ nrow(.x) > 0)))
   expect_true(all(map_lgl(bp, checkColumnNames)))
   expect_true(all(map_lgl(bp, checkColumnTypes)))
+  expect_true(all(map_lgl(bp, checkNAs)))
 })
 
 ## TODO create test for using Zenodo
-
 test_that("importBugphyzz doesn't work with other words", {
   expect_error(importBugphyzz(version = "abcd-1234", force_download = TRUE))
 })
