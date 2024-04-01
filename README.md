@@ -27,3 +27,8 @@ After installation, check vignettes with:
 ```r
 browseVigenttes("bugphyzz")
 ```
+
+TODO:
+
+- Remove LICENSE file
+- Add scores to signatures
