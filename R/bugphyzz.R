@@ -288,7 +288,6 @@ getTaxonSignatures <- function(tax, bp, ...) {
 
 .validationData <- function() {
   fname <- system.file("extdata", "validation_summary.tsv", package = "bugphyzz")
-  # url <-  "https://raw.githubusercontent.com/waldronlab/taxPProValidation/main/validation_summary.tsv"
   utils::read.table(
     file = fname, header = TRUE, sep = "\t", row.names = NULL
   ) |>
