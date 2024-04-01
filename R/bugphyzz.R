@@ -304,9 +304,7 @@ getTaxonSignatures <- function(tax, bp, ...) {
   if (stringr::str_detect(version, "^10.5281/zenodo.[0-9]+$")) {
     suffix <- sub("^10.5281/zenodo\\.", "", version)
     output <- .downloadZ(suffix, force_download)
-  } else if (version == "devel") {
-    output <- .downloadGH(version, force_download)
-  } else if (stringr::str_detect(version, stringr::regex("^[:alnum:]{7}$")) ){
+  } else if (version == "devel" || stringr::str_detect(version, stringr::regex("^[:alnum:]{7}$")) ){
     output <- .downloadGH(version, force_download)
   } else {
     stop("Version must be a Zenodo DOI, GitHub commit hash, or 'devel'.")
