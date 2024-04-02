@@ -1,6 +1,12 @@
-# Files description
+# Description about the files in the extdata directory
 
-The files provided here were generated manually.
+All of the files in the extdata directory, with the exeception of
+the `validation_summary.tsv` file, were manually created/edited.
+
+These files are necessary for 1) the bugphyzz package to work properly and
+2) a convenient way for curators to update the files.
+
+What follows is the description of each file.
 
 ## [attribute_sources.tsv](./attribute_sources.tsv)
 
@@ -10,25 +16,23 @@ Columns:
 
 | Column | Description |
 | --- | --- |
-| Attribute_source | The abbreviated name of the source. |
-| Confidence_in_curation\*| How trustable is a source. |
-| Evidence \*\* | The type of evidence supporting the annotations in the original source. Options: exp, igc, nas, tas. |
+| Attribute_source | The abbreviated name of the source. This is the one used in the output of `importBugphyzz`.|
+| Confidence_in_curation | One of three: high, medium, low.|
+| Evidence \* | The type of evidence supporting the annotations in the original source. |
 | full_source | The full name of the source. It could be a citation, a link to webpage or project, etc. |
 
-**\* Confidence_in_curation**
-- High.
-- Medium.
-- Low.
-
-**\*\* Evidence**
+**\* Evidence**
+Options:
 - exp. Inferred from experiment.
 - igc. Inferred from genomic context.
 - nas. Non-traceable author statement.
 - tas. Traceable author statement. 
+- tax. IBD = inferred from biological aspect of descendant.
+- asr. anscestral state reconstruction.
 
 ## [attributes.tsv](./attributes.tsv)
 
-Contains the description of the attribute values included in bugphyzz.
+It contains the description of the attribute values included in bugphyzz.
 
 Columns:
 
@@ -42,9 +46,8 @@ Columns:
 
 ## [spreadsheet_custmolinks.tsv](./spreadsheet_customlinks.tsv)
 
-Links for datasets in spreadsheets that are not in tidy format and need to be
-converted to tidy format. These datasets are not imported through the 
-physiologies function, so they need their own fucntion.
+Links for datasets in google spreadsheets that are not in tidy format and
+need to be converted to tidy format.
 
 Columns:
 
@@ -56,11 +59,9 @@ Columns:
 | functionname | The name of the function (unexported) in bugphyzz. |
 | source_link |  Link to the source spreadsheet on Google Docs. |
 
-
 ## [spreadsheet_links.tsv](./spreadsheet_links.tsv)
 
 Links for datasets in spreadsheets that are already in tidy format.
-These datsets are imported with the physiologies function (no exported).
 
 Columns:
 
@@ -106,37 +107,41 @@ Columns:
 
 ## [validation_summary.tsv](./validation_summary.tsv)
 
-Results of the validation of the ASR method using the waldronlab/taxPPro package
+This file was obtained from the waldronlab/taxPProValidtion repository hosted
+on GitHub. It contains the results of a 10-fold cross-validation analysis
+of the ancestral state reconstruction (ASR) methods used to get
+annotations for the package.
 
-Hash: e736097
+Detailed information (code and explanation) can be found on the repository.
+
+The file was downloaded on April 1st, 2024 from this URL (pay attention to 
+the commit hash):
+
+https://raw.githubusercontent.com/waldronlab/taxPProValidation/e736097/validation_summary.tsv
+
+The code used, which was executed directly in the extdata directory, was:
+
+```bash
+wget https://raw.githubusercontent.com/waldronlab/taxPProValidation/e736097/validation_summary.tsv
+```
 
 | Column name | Description |
 | ----------- | ----------- |
 | method | ASR method (phytools-ltp or castor-ltp) |
-| rank | Taxonomic rank (all, genus, species, strain). all was used for the final results.|
+| rank | Taxonomic rank (all, genus, species, strain). "all" was used for the output of `importBugphyzz`.|
 | physiology | The name of the attribute group. |
 | attribute | The name of the attribute or attribute value.|
-| mcc_mean | mean of Mathew's correlation coefficient for discrete only. |
-| mcc_sd | standard deviation of Matthew's correlation coefficient for discrete only.|
-| r2_mean | R-squard for numeric only. |
-| r2_sd | R-squared for numeric only. |
-| ltp_bp | Interesction between taxa in bugphyzz (per attribute/attribute value) and the ltp tree. |
+| mcc_mean | The mean of Mathew's correlation coefficient for discrete only. |
+| mcc_sd | The standard deviation of Matthew's correlation coefficient for discrete only.|
+| r2_mean | The mean of the R-squared for numeric only.|
+| r2_sd | The standard deviation of the R-squared for numeric only.|
+| ltp_bp | Interesction between taxa in bugphyzz (per attribute/attribute value) and the ltp tree.|
 | bp | Taxa in bugphyzz (per attribute/attribute value). |
-| ltp_bp_phys | Intersection between taxa in bugphyz (per attribute group) and the ltp tree. |
+| ltp_bp_phys | Intersection between taxa in bugphyz (per attribute group) and the ltp tree.|
 | bp_phys | Total taxa in the bugphyzz (per attribute group).|
 | ltp | Number of taxa in the LTP tree. |
-| nsti_mean | Mean NSTI value. This was calculated for all physiologies, but is only relevant for numeric ones.|
-| nsti_sd |  Standard deviation of the NSTI value. This was calculated for all physiologies, but is only relevant for numeric ones. |
-| ltp_bp_per | Intersection of LTP tree and bugphyzz (per attribute/attribute value) in numbers. |
-| ltp_bp_phys_per | Intersection of LTP tree and bugphyzz (per physiology/attribute group) in percentage. |
-
-
-
-
-
-
-
-
-
-
+| nsti_mean | The mean of the NSTI values. This was calculated for all physiologies, but it's only relevant for numeric ones.|
+| nsti_sd | The standard deviation of the NSTI values. This was calculated for all physiologies, but it's only relevant for numeric ones.|
+| ltp_bp_per | Intersection of LTP tree and bugphyzz (per attribute/attribute value) in numbers.|
+| ltp_bp_phys_per | Intersection of LTP tree and bugphyzz (per physiology/attribute group) in percentage.|
 
