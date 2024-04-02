@@ -12,8 +12,8 @@ utils::globalVariables(c(
 #' tidy data.frames. To learn more about the structure of the data.frames
 #' please check the bugphyzz vignette with `browseVignettes("bugphyzz")`.
 #'
-#' @param version Character string indicating the version.
-#' Options: devel or a zenodo record.
+#' @param version Character string indicating the version. Default is the
+#' latest release on Zenodo.  Options: Zenodo DOI, GitHub commit hash, or devel.
 #' @param force_download Logical value. Force a fresh download of the data or
 #' use the one stored in the cache (if available). Default is FALSE.
 #' @param v Validation value. Default 0.5 (see details).
@@ -54,12 +54,14 @@ utils::globalVariables(c(
 #' names(bp)
 #'
 importBugphyzz <- function(
-    version = 'devel', force_download = FALSE, v = 0.5, exclude_rarely = TRUE
+    version = "d3fd894", force_download = FALSE, v = 0.5, exclude_rarely = TRUE
 
 ) {
-  if (version == 'devel') {
-    output <- .downloadDevel(force_download)
-  }
+
+  ## output is a list of three data.frames
+  ## one of each: binary, multistate, numeric
+  output <- .downloadResource(version, force_download)
+
   ## TODO add release version
   output <- lapply(output, function(x) split(x, x$Attribute))
   output <- purrr::list_flatten(output)
@@ -285,9 +287,9 @@ getTaxonSignatures <- function(tax, bp, ...) {
 }
 
 .validationData <- function() {
-  url <-  "https://raw.githubusercontent.com/waldronlab/taxPProValidation/main/validation_summary.tsv"
+  fname <- system.file("extdata", "validation_summary.tsv", package = "bugphyzz")
   utils::read.table(
-    file = url, header = TRUE, sep = "\t", row.names = NULL
+    file = fname, header = TRUE, sep = "\t", row.names = NULL
   ) |>
     dplyr::mutate(
       value = dplyr::case_when(
@@ -297,30 +299,20 @@ getTaxonSignatures <- function(tax, bp, ...) {
     )
 }
 
-## Import the devel version of bupghyzz
-.downloadDevel <- function(force_download) {
-  types <- c("multistate", "binary", "numeric")
-  urls <- paste0(
-    "https://github.com/waldronlab/bugphyzzExports/raw/main/bugphyzz_",
-    types,
-    ".csv"
-  )
-  names(urls) <- types
-  output <- vector("list", length(urls))
-  for (i in seq_along(output)) {
-    message("Importing ", names(urls)[i], " data...")
-    names(output)[i] <- names(urls)[i]
-    rpath <- .getResource(
-      rname = paste0("bugphyzz_", names(urls)[i], ".tsv"),
-      url = urls[i], verbose = TRUE, force = force_download
-    )
-    output[[i]] <- utils::read.csv(rpath, header = TRUE, skip = 1) |>
-      dplyr::mutate(Attribute = tolower(Attribute))
+## Import a version of bupghyzz
+.downloadResource <- function(version, force_download) {
+  if (stringr::str_detect(version, "^10.5281/zenodo.[0-9]+$")) {
+    suffix <- sub("^10.5281/zenodo\\.", "", version)
+    output <- .downloadZ(suffix, force_download)
+  } else if (version == "devel" || stringr::str_detect(version, stringr::regex("^[:alnum:]{7}$")) ){
+    output <- .downloadGH(version, force_download)
+  } else {
+    stop("Version must be a Zenodo DOI, GitHub commit hash, or 'devel'.")
   }
   return(output)
 }
 
-## TODO update this function when relase is ready
+## Function for downloading data on Zenodo
 .downloadZ <- function(record, force_download) {
   base_url <- paste0("https://zenodo.org/api/records/", record)
   req <- httr2::request(base_url)
@@ -340,9 +332,29 @@ getTaxonSignatures <- function(tax, bp, ...) {
 
   output <- vector("list", length(files))
   for (i in seq_along(output)) {
-    output[[i]] <- utils::read.csv(files[i], header = TRUE)
-    # output[[i]] <- utils::read.csv(files, header = TRUE, skip = 1)
-    # dplyr::mutate(Attribute = tolower(Attribute))
+    output[[i]] <- utils::read.csv(files, header = TRUE, skip = 1) |>
+      dplyr::mutate(Attribute = tolower(Attribute))
   }
   return(output)
+}
+
+## Function for downloading data on GitHub
+.downloadGH <- function(version, force_download) {
+    file_suffix <- c("binary", "multistate", "numeric")
+    urls <- paste0("https://github.com/waldronlab/bugphyzzExports/raw/",
+           version, "/bugphyzz_", file_suffix, ".csv"
+    )
+    names(urls) <-  c("binary", "multistate", "numeric")
+    output <- vector("list", length(urls))
+    for (i in seq_along(output)) {
+      message("Importing ", names(urls)[i], " data...")
+      names(output)[i] <- names(urls)[i]
+      rpath <- .getResource(
+        rname = paste0("bugphyzz_", names(urls)[i], ".csv"),
+        url = urls[i], verbose = TRUE, force = force_download
+      )
+      output[[i]] <- utils::read.csv(rpath, header = TRUE, skip = 1) |>
+        dplyr::mutate(Attribute = tolower(Attribute))
+    }
+    return(output)
 }
