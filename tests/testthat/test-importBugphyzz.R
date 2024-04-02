@@ -162,7 +162,7 @@ checkCuration <- function(x) {
 # tests -------------------------------------------------------------------
 
 test_that("importBugphyzz works with devel", {
-  bp <- importBugphyzz(version = "devel", force_download = FALSE)
+  bp <- importBugphyzz(version = "devel", force_download = TRUE)
   expect_true(all("data.frame" == map_chr(bp, class)))
   expect_true(all(map_lgl(bp, ~ nrow(.x) > 0)))
   expect_true(all(map_lgl(bp, checkColumnNames)))
@@ -172,7 +172,7 @@ test_that("importBugphyzz works with devel", {
 })
 
 test_that("importBugphyzz works with hash", {
-  bp <- importBugphyzz(version = "d3fd894", force_download = TRUE)
+  bp <- importBugphyzz(version = "e30b20e", force_download = TRUE)
   expect_true(all("data.frame" == map_chr(bp, class)))
   expect_true(all(map_lgl(bp, ~ nrow(.x) > 0)))
   expect_true(all(map_lgl(bp, checkColumnNames)))
